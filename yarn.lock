@@ -958,6 +958,11 @@
     sf-symbols-typescript "^2.1.0"
     vaul "^1.1.2"
 
+"@expo/vector-icons@^15.0.2":
+  version "15.1.1"
+  resolved "https://registry.yarnpkg.com/@expo/vector-icons/-/vector-icons-15.1.1.tgz#4b1d2c60493c0b0536972f0a5babd5f5c85b48f4"
+  integrity sha512-Iu2VkcoI5vygbtYngm7jb4ifxElNVXQYdDrYkT7UCEIiKLeWnQY0wf2ZhHZ+Wro6Sc5TaumpKUOqDRpLi5rkvw==
+
 "@expo/ws-tunnel@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@expo/ws-tunnel/-/ws-tunnel-2.0.0.tgz#32d5fae46c7deb34cdf6b319a53b8a19b7915c93"
@@ -1509,6 +1514,11 @@ asap@~2.0.3, asap@~2.0.6:
   resolved "https://registry.yarnpkg.com/asap/-/asap-2.0.6.tgz#e50347611d7e690943208bbdafebcbc2fb866d46"
   integrity sha512-BSHWgDSAiKs50o2Re8ppvp3seVHXSRM44cdSsT9FfNEUUZLOGWVCsiWaRPWM1Znn+mqZ1OfVZ3z3DWEzSp7hRA==
 
+await-lock@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/await-lock/-/await-lock-2.2.2.tgz#a95a9b269bfd2f69d22b17a321686f551152bcef"
+  integrity sha512-aDczADvlvTGajTDjcjpJMqRkOF6Qdz3YbPZm/PyW6tKPkx2hlYBzxMhEywM/tU72HrVZjgl5VCdRuMlA7pZ8Gw==
+
 babel-plugin-polyfill-corejs2@^0.4.14:
   version "0.4.17"
   resolved "https://registry.yarnpkg.com/babel-plugin-polyfill-corejs2/-/babel-plugin-polyfill-corejs2-0.4.17.tgz#198f970f1c99a856b466d1187e88ce30bd199d91"
@@ -2052,12 +2062,22 @@ expo-asset@~56.0.17:
     "@expo/image-utils" "^0.10.1"
     expo-constants "~56.0.18"
 
+expo-clipboard@~56.0.4:
+  version "56.0.4"
+  resolved "https://registry.yarnpkg.com/expo-clipboard/-/expo-clipboard-56.0.4.tgz#b15ea42f4d0b149c76a34a19c899136e2049068e"
+  integrity sha512-qb4DYlkiowHYHaUYVT2FN9nk/nI1xShXOUYsI7J9dVpQCOHcGFjCBPX1VAvEW4Ye4/Aagd6IuhOVAq/+scBOiA==
+
 expo-constants@~56.0.18:
   version "56.0.18"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-56.0.18.tgz#f9be4f8af7470144578ac945bfa98c271cf39120"
   integrity sha512-8AMtbDGl/WVPnWlmbpGmvcdnNCy9E4PFnwdVwj600vljkMDPSxcAcjw8GVXEPk3PpZ+ngTqsrkltWyj0UKYAxw==
   dependencies:
     "@expo/env" "~2.3.0"
+
+expo-crypto@~56.0.4:
+  version "56.0.4"
+  resolved "https://registry.yarnpkg.com/expo-crypto/-/expo-crypto-56.0.4.tgz#37e9be1f0901185fa83178d802f49695fc71422e"
+  integrity sha512-fRNEhoXRXgAWBpe3/hq5X+KXTit3OZqdiAGts1YvNEUHQb+H5591mpPac0Yw+sZg9pXcrjRnzo5AxvZaENpc7g==
 
 expo-device@~56.0.4:
   version "56.0.4"
@@ -2082,6 +2102,18 @@ expo-glass-effect@^56.0.4, expo-glass-effect@~56.0.4:
   version "56.0.4"
   resolved "https://registry.yarnpkg.com/expo-glass-effect/-/expo-glass-effect-56.0.4.tgz#4549a8c84058fb88619ecb2e818be36f2fe003ee"
   integrity sha512-xI9rXtDwi7RW82uAlfyaXO6+k21ApWJ2tHAWYqPr/FjfmZbKsgNJ4Q0iZzGPCwboqjTGxaRZ61SZxBl8hDt5iA==
+
+expo-image-loader@~56.0.3:
+  version "56.0.3"
+  resolved "https://registry.yarnpkg.com/expo-image-loader/-/expo-image-loader-56.0.3.tgz#665112665e78d0fd9629f6160e2ca419d7f0c5c6"
+  integrity sha512-JgUo4fUeU1ZC+z8iBFj8v7yoGQnZrLbOVPyNE+DWVrld55F2F6R1ck+rmdm/8TNWLz1LhNQfD7c3XYP1ZikxXA==
+
+expo-image-picker@~56.0.17:
+  version "56.0.17"
+  resolved "https://registry.yarnpkg.com/expo-image-picker/-/expo-image-picker-56.0.17.tgz#ef506df0219a69dd1d7a9bd6d270652ab5d3b65d"
+  integrity sha512-/RojW1ptyQNV89hEeDdaoHCkn38+546MqakMyB0acFf0HLh5ZI7wxQCHkxr16qjuQMy11M+96GlX9Z6vgXF7Nw==
+  dependencies:
+    expo-image-loader "~56.0.3"
 
 expo-image@~56.0.11:
   version "56.0.11"
@@ -2180,6 +2212,13 @@ expo-splash-screen@~56.0.10:
     "@expo/config-plugins" "~56.0.8"
     "@expo/image-utils" "^0.10.1"
     xml2js "0.6.0"
+
+expo-sqlite@~56.0.5:
+  version "56.0.5"
+  resolved "https://registry.yarnpkg.com/expo-sqlite/-/expo-sqlite-56.0.5.tgz#7967bcf7481d3bb5316116c73200a7e01a5c5cf6"
+  integrity sha512-wHYRVLS5nUFEtli45wHaO+RjlRY8sQXyOSgENVk6I4zq7+FgySqjOk3YOYW6IKIMwhj5XzjMJO+pY8xKUy73Kw==
+  dependencies:
+    await-lock "^2.2.2"
 
 expo-status-bar@~56.0.4:
   version "56.0.4"
@@ -3365,6 +3404,11 @@ react-native-screens@4.25.2, react-native-screens@^4.25.2:
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
+
+react-native-toast-message@^2.3.3:
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/react-native-toast-message/-/react-native-toast-message-2.3.3.tgz#e301508d386a9902ff6b4559ecc6674f8cfdf97a"
+  integrity sha512-4IIUHwUPvKHu4gjD0Vj2aGQzqPATiblL1ey8tOqsxOWRPGGu52iIbL8M/mCz4uyqecvPdIcMY38AfwRuUADfQQ==
 
 react-native-web@~0.21.0:
   version "0.21.2"
