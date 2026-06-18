@@ -3,7 +3,6 @@ export type MediaProps = {
   uniqueId: string,
   mediaPath: string;
   mediaType: string;
-  isAdded?: boolean;
   notes?: string;
   addedOn?: number;
 };

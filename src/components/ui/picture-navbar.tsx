@@ -1,23 +1,28 @@
 // components/Navbar.tsx
-import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   GestureResponderEvent,
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 
 interface PictureNavbarProps {
   headerTitle: string;
   isAddIconVisible?: boolean;
+  isDeleteIconVisible?: boolean;
   isEditIconVisible?: boolean;
   showSearchIcon?: boolean;
+  isCancelTextVisible?: boolean;
   onGoBack?: (event: GestureResponderEvent) => void;
   onAddPress?: (event: GestureResponderEvent) => void;
+  onDeletePress?: (event: GestureResponderEvent) => void;
   onSearchPress?: (event: GestureResponderEvent) => void;
   onEditNotePress?: (event: GestureResponderEvent) => void;
   onCopyNotePress?: (event: GestureResponderEvent) => void;
+  onCancelPress?: (event: GestureResponderEvent) => void;
 }
 
 const PictureNavbar: React.FC<PictureNavbarProps> = ({
@@ -25,11 +30,15 @@ const PictureNavbar: React.FC<PictureNavbarProps> = ({
   onGoBack,
   onSearchPress,
   onAddPress,
+  onDeletePress,
   onEditNotePress,
   onCopyNotePress,
+  isCancelTextVisible,
   isAddIconVisible,
+  isDeleteIconVisible,
   isEditIconVisible,
   showSearchIcon,
+  onCancelPress,
 }) => {
   return (
     <View style={styles.container}>
@@ -37,7 +46,7 @@ const PictureNavbar: React.FC<PictureNavbarProps> = ({
       <View style={styles.iconContainer}>
         {!!onGoBack && (
           <Pressable onPress={onGoBack}>
-            <Ionicons name="arrow-back-outline" size={22} style={styles.icon} />
+            <MaterialIcons name="arrow-back" size={24} style={styles.icon} />
           </Pressable>
         )}
       </View>
@@ -47,19 +56,30 @@ const PictureNavbar: React.FC<PictureNavbarProps> = ({
       <View style={styles.iconContainer}>
         {!!onSearchPress && (
           <Pressable onPress={onSearchPress}>
-            <Ionicons name="search" size={22} style={styles.icon} />
+            <MaterialIcons name="search" size={24} color="black" />
+          </Pressable>
+        )}
+
+        {isDeleteIconVisible && !!onDeletePress && (
+          <Pressable onPress={onDeletePress}>
+            <MaterialIcons name="delete" size={24} style={styles.icon} />
           </Pressable>
         )}
 
         {!!onAddPress && isAddIconVisible && (
           <Pressable onPress={onAddPress}>
-            <Ionicons name="add-outline" size={24} style={styles.icon} />
+            <MaterialIcons name="cloud-upload" size={24} style={styles.icon} />
           </Pressable>
         )}
         {!!onEditNotePress && isEditIconVisible && (
           <Pressable onPress={onEditNotePress}>
-            <Ionicons name="pencil" size={24} style={styles.icon} />
+            <MaterialIcons name="edit" size={24} style={styles.icon} />
           </Pressable>
+        )}
+        {!!onCancelPress && isCancelTextVisible && (
+          <TouchableOpacity onPress={onCancelPress}>
+            <Text style={styles.actionText}>Cancel</Text>
+          </TouchableOpacity>
         )}
       </View>
     </View>
@@ -86,6 +106,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: "#000",
+  },
+  actionText: {
+    color: "#000",
+    fontWeight: "600",
+    fontSize: 18,
   },
 });
 

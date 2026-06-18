@@ -1,6 +1,5 @@
 import { MediaProps } from "@/constants/picture";
 import { usePictureDb } from "@/hooks/use-picture-db";
-import { randomUUID } from "expo-crypto";
 import {
   AssetField,
   MediaType,
@@ -44,7 +43,6 @@ const PictureGallery = () => {
           );
 
           if (index > -1) {
-            element.isAdded = true;
             //@ts-ignore
             element.id = dbAssets[index].id;
             //@ts-ignore
@@ -62,6 +60,7 @@ const PictureGallery = () => {
   }, [getAllMedias]);
 
   const queryAssets = async () => {
+    const start = Date.now();
     try {
       const { status } = await requestPermissionsAsync();
       if (status !== "granted") {
@@ -78,35 +77,36 @@ const PictureGallery = () => {
           const asset = queryResult[index];
           const mediaType = (await asset.getMediaType()).toString();
           const mediaPath = await asset.getUri();
-          allMedia.push({
-            uniqueId: randomUUID(),
-            mediaPath: mediaPath,
-            mediaType,
-            isAdded: false,
-          });
+          // allMedia.push({
+          //   uniqueId: randomUUID(),
+          //   mediaPath: mediaPath,
+          //   mediaType,
+          //   isAdded: false,
+          // });
         }
-        const dbAssets = await getAllMedias();
-        allMedia.forEach((element) => {
-          const index = dbAssets.findIndex(
-            //@ts-ignore
-            (dbEle: MediaProps) => dbEle.mediaPath == element.mediaPath,
-          );
+        // const dbAssets = await getAllMedias();
+        // allMedia.forEach((element) => {
+        //   const index = dbAssets.findIndex(
+        //     //@ts-ignore
+        //     (dbEle: MediaProps) => dbEle.mediaPath == element.mediaPath,
+        //   );
 
-          if (index > -1) {
-            element.isAdded = true;
-            //@ts-ignore
-            element.id = dbAssets[index].id;
-            //@ts-ignore
-            element.notes = dbAssets[index].notes;
-          }
-        });
-        setAssets(allMedia);
+        //   if (index > -1) {
+        //     element.isAdded = true;
+        //     //@ts-ignore
+        //     element.id = dbAssets[index].id;
+        //     //@ts-ignore
+        //     element.notes = dbAssets[index].notes;
+        //   }
+        // });
+        // setAssets(allMedia);
       } else {
         console.log("No assets found in the media library.");
       }
     } catch (error) {
       console.log(error);
     }
+    console.log("Time taken to fetch assets:", Date.now() - start, "ms");
   };
 
   return (

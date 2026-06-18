@@ -48,6 +48,7 @@ export default function BrowseMedia() {
         quality: 1,
       });
 
+      console.log(result.assets);
       if (!result.canceled) {
         const uniques = result.assets.filter(
           (o) => !images.find((o2) => o.uri === o2.mediaPath),

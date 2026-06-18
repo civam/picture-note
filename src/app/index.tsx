@@ -1,7 +1,7 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 
-import PictureGallery from "@/components/ui/picture-gallery";
-import PictureNavbar from "@/components/ui/picture-navbar";
+import MultiSelectMedia from "@/components/ui/multi-select";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const handleSearchPress = () => {};
@@ -9,19 +9,22 @@ export default function HomeScreen() {
   const handleAddPress = () => {};
 
   return (
-    <View style={styles.container}>
-      <PictureNavbar
+    <SafeAreaView style={styles.container}>
+      {/* <PictureNavbar
         headerTitle={"Picture Note"}
         onSearchPress={handleSearchPress}
-      />
-      <PictureGallery />
-    </View>
+      /> */}
+      {/* <PictureGallery />
+      <BrowseMedia /> */}
+      <MultiSelectMedia />
+      {/* </View> */}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
+    flex: 1,
     // // justifyContent: "center",
     // flexDirection: "row",
   },

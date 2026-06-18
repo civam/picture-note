@@ -1,15 +1,24 @@
 import { PICTURE_TABLE_NAME } from "@/constants/app-contants";
-import { type SQLiteDatabase } from "expo-sqlite";
+import * as SQLite from "expo-sqlite";
 
-export async function initDb(db: SQLiteDatabase) {
+/**
+ * Initialize the media notes database and create table if needed
+ */
+export async function initDb(db: SQLite.SQLiteDatabase): Promise<void> {
   try {
+    // Create mediadata table if it doesn't exist
     await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS ${PICTURE_TABLE_NAME}
-     (id INTEGER PRIMARY KEY NOT NULL, mediaPath TEXT NOT NULL, addedOn INTEGER, notes TEXT);
-`);
-    console.log("Database tables initialized successfully.");
+      CREATE TABLE IF NOT EXISTS ${PICTURE_TABLE_NAME} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mediaPath TEXT NOT NULL UNIQUE,
+        addedOn INTEGER NOT NULL,
+        notes TEXT
+      );
+    `);
+
+    console.log(`✓ Database initialized and ${PICTURE_TABLE_NAME} table ready`);
   } catch (error) {
-    console.error("Error initializing database tables:", error);
+    console.error("Database initialization error:", error);
+    throw error;
   }
 }

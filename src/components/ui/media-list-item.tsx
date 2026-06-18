@@ -18,12 +18,10 @@ const MediaListItem: React.FC<MediaItemProps> = ({ item }) => {
         id: item.id,
         notes: item.notes,
         mediaPath: item.mediaPath,
-        isAdded: item.isAdded?.toString(),
       },
     });
   };
 
-  console.log("Notes", item.notes);
   return (
     <TouchableOpacity style={styles.container} onPress={handleOnImagePress}>
       <Image source={{ uri: item.mediaPath }} style={styles.image} />

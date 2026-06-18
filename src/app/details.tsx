@@ -2,7 +2,7 @@
 import { ThemedText } from "@/components/themed-text";
 import PictureNavbar from "@/components/ui/picture-navbar";
 import { usePictureDb } from "@/hooks/use-picture-db";
-import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
@@ -12,7 +12,7 @@ import {
   Pressable,
   StyleSheet,
   TextInput,
-  View
+  View,
 } from "react-native";
 
 import Toast from "react-native-toast-message";
@@ -29,12 +29,13 @@ type Params = {
 export default function Details() {
   const { id, uniqueId, mediaPath, notes, isAdded, assetType } =
     useLocalSearchParams<Params>();
+
   const router = useRouter();
   const [mediaNote, setMediaNote] = useState<string>(notes || "");
   const [showEditNotes, setShowEditNotes] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { addMedia, updateMediaNote } = usePictureDb();
+  const { addMedia, updateMediaNote, deleteMedia } = usePictureDb();
 
   const handleOnAdd = async () => {
     try {
@@ -43,7 +44,6 @@ export default function Details() {
         uniqueId,
         mediaPath,
         notes: mediaNote,
-        isAdded: true,
         mediaType: assetType,
       });
       showToast("Record saved", false);
@@ -71,7 +71,7 @@ export default function Details() {
     try {
       setIsLoading(true);
       setShowEditNotes(false);
-      if (isAdded == "true") {
+      if (!!id) {
         await updateMediaNote(+id, mediaNote);
         showToast("Record saved", false);
       } else {
@@ -79,7 +79,6 @@ export default function Details() {
           mediaPath,
           uniqueId,
           notes: mediaNote,
-          isAdded: true,
           mediaType: assetType,
         });
         showToast("Record saved", false);
@@ -94,6 +93,16 @@ export default function Details() {
 
   const handleGoBack = () => {
     router.back();
+  };
+
+  const handleOnDelete = async () => {
+    try {
+      await deleteMedia(+id);
+      showToast("Record deleted", false);
+      router.back();
+    } catch (error) {
+      showToast("Error while deleting", true);
+    }
   };
 
   const showToast = (message: string, isError: boolean) => {
@@ -111,6 +120,8 @@ export default function Details() {
         isAddIconVisible={isAdded === "false"}
         isEditIconVisible={true}
         onEditNotePress={handleOnEditNotes}
+        isDeleteIconVisible={!!id}
+        onDeletePress={handleOnDelete}
         onGoBack={handleGoBack}
       />
       <View style={styles.container}>
@@ -118,12 +129,16 @@ export default function Details() {
         <View style={styles.iconContainer}>
           {showEditNotes && mediaNote && !isLoading && (
             <Pressable onPress={handleOnSaveNotes}>
-              <Ionicons name="save-outline" size={24} style={styles.icon} />
+              <MaterialIcons name="save" size={24} style={styles.icon} />
             </Pressable>
           )}
           {!showEditNotes && !!notes && (
             <Pressable onPress={handleOnCopyNotes}>
-              <Ionicons name="copy-outline" size={24} style={styles.icon} />
+              <MaterialIcons
+                name="content-copy"
+                size={24}
+                style={styles.icon}
+              />
             </Pressable>
           )}
           {isLoading && <ActivityIndicator size="small" color="#0000ff" />}
@@ -141,7 +156,6 @@ export default function Details() {
           <ThemedText>{notes || mediaNote}</ThemedText>
         )}
       </View>
-      <Toast position="bottom" bottomOffset={20} />
     </View>
   );
 }

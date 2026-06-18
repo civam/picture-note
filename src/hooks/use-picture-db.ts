@@ -8,7 +8,7 @@ export function usePictureDb() {
 
   const addMultipleMedia = async (medias: MediaProps[]) => {
     const db = await SQLite.openDatabaseAsync(DB_NAME);
-    let results = 0;
+    let results = [];
     const statement = await db.prepareAsync(
       `INSERT INTO ${PICTURE_TABLE_NAME} (mediaPath, addedOn, notes) VALUES ($mediaPath, $addedOn, $notes);`,
     );
@@ -19,7 +19,12 @@ export function usePictureDb() {
           $addedOn: Date.now(),
           $notes: null,
         });
-        results++;
+        
+        results.push({
+          status: 'success',
+          id: result.lastInsertRowId,
+          mediaPath: media.mediaPath,
+        });
       }
     } catch (error) {
       console.log(error);
@@ -35,11 +40,13 @@ export function usePictureDb() {
       `INSERT INTO ${PICTURE_TABLE_NAME} (mediaPath, addedOn, notes) VALUES ($mediaPath, $addedOn, $notes);`,
     );
     try {
-      return await statement.executeAsync({
+      const data = await statement.executeAsync({
         $mediaPath: media.mediaPath,
         $addedOn: Date.now(),
         $notes: media.notes || null,
       });
+      return data.lastInsertRowId;
+
     } catch (error) {
       console.log(error);
     } finally {
@@ -78,14 +85,25 @@ export function usePictureDb() {
   };
 
   const deleteMedia = async (id: number) => {
-    return await db.runAsync(
-      `'DELETE FROM ${PICTURE_TABLE_NAME} WHERE id = ?'`,
-      id,
+    const db = await SQLite.openDatabaseAsync(DB_NAME);
+    const statement = await db.prepareAsync(
+      `DELETE FROM ${PICTURE_TABLE_NAME} WHERE id = $id;`,
     );
+    try {
+      return await statement.executeAsync({
+        $id: id,
+      });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    } finally {
+      await statement.finalizeAsync();
+    }
   };
 
   return {
     addMedia,
+    addMultipleMedia,
     getAllMedias,
     updateMediaNote,
     deleteMedia,
