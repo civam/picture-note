@@ -1,69 +1,180 @@
+import AlbumPickerModal from "@/components/ui/album-picker-modal";
 import { MediaProps } from "@/constants/picture";
-import { useMultiSelect } from "@/hooks/use-picture-gallery";
+import { GALLERY_COLUMNS, GallerySection, useGallery } from "@/hooks/use-picture-gallery";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
-  FlatList,
   Image,
+  SectionList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import PictureNavbar from "./picture-navbar";
 
 const WINDOW_WIDTH = Dimensions.get("window").width;
-const COLUMNS = 3;
 const MARGIN = 2;
-const ITEM_SIZE = (WINDOW_WIDTH - MARGIN * (COLUMNS + 1)) / COLUMNS;
+const ITEM_SIZE = (WINDOW_WIDTH - MARGIN * (GALLERY_COLUMNS + 1)) / GALLERY_COLUMNS;
+
+// ─── GalleryItem ────────────────────────────────────────────────────────────
+
+type GalleryItemProps = {
+  item: MediaProps;
+  isSelected: boolean;
+  isMultiSelectEnabled: boolean;
+  onPress: (item: MediaProps) => void;
+  onLongPress: (mediaPath: string) => void;
+};
+
+const GalleryItem = React.memo(
+  ({ item, isSelected, isMultiSelectEnabled, onPress, onLongPress }: GalleryItemProps) => (
+    <TouchableOpacity
+      style={styles.gridItem}
+      onPress={() => onPress(item)}
+      onLongPress={() => onLongPress(item.mediaPath)}
+      activeOpacity={0.75}
+    >
+      <Image source={{ uri: item.mediaPath }} style={styles.mediaThumbnail} />
+      {isSelected && <View style={styles.visualDimmer} />}
+      {isMultiSelectEnabled && (
+        <View style={[styles.indicatorBadge, isSelected ? styles.badgeActive : styles.badgeInactive]}>
+          {isSelected && <Text style={styles.glyphCheck}>✓</Text>}
+        </View>
+      )}
+      {!!item.id && (
+        <View style={styles.indicatorUpload}>
+          <MaterialCommunityIcons name="cloud-check-variant" size={18} color="white" />
+        </View>
+      )}
+      {!!item.notes && (
+        <View style={styles.indicatorNotes}>
+          <MaterialCommunityIcons name="note" size={18} color="white" />
+        </View>
+      )}
+    </TouchableOpacity>
+  ),
+);
+
+// ─── GalleryRow ─────────────────────────────────────────────────────────────
+
+type GalleryRowProps = {
+  row: MediaProps[];
+  selectedIds: Set<string>;
+  isMultiSelectEnabled: boolean;
+  onPress: (item: MediaProps) => void;
+  onLongPress: (mediaPath: string) => void;
+};
+
+function rowsEqual(prev: GalleryRowProps, next: GalleryRowProps): boolean {
+  if (
+    prev.row !== next.row ||
+    prev.isMultiSelectEnabled !== next.isMultiSelectEnabled ||
+    prev.onPress !== next.onPress ||
+    prev.onLongPress !== next.onLongPress
+  )
+    return false;
+  for (const item of next.row) {
+    if (prev.selectedIds.has(item.mediaPath) !== next.selectedIds.has(item.mediaPath))
+      return false;
+  }
+  return true;
+}
+
+const GalleryRow = React.memo(
+  ({ row, selectedIds, isMultiSelectEnabled, onPress, onLongPress }: GalleryRowProps) => (
+    <View style={styles.row}>
+      {row.map((item) => (
+        <GalleryItem
+          key={item.uniqueId}
+          item={item}
+          isSelected={selectedIds.has(item.mediaPath)}
+          isMultiSelectEnabled={isMultiSelectEnabled}
+          onPress={onPress}
+          onLongPress={onLongPress}
+        />
+      ))}
+      {/* Fill empty slots in the last row of a section */}
+      {row.length < GALLERY_COLUMNS &&
+        Array.from({ length: GALLERY_COLUMNS - row.length }).map((_, i) => (
+          <View key={`spacer-${i}`} style={styles.gridItem} />
+        ))}
+    </View>
+  ),
+  rowsEqual,
+);
+
+// ─── Static helpers (no component state) ────────────────────────────────────
+
+const renderSectionHeader = ({ section }: { section: GallerySection }) => (
+  <View style={styles.sectionHeader}>
+    <Text style={styles.sectionTitle}>{section.title}</Text>
+  </View>
+);
+
+const GalleryFooter = () => (
+  <ActivityIndicator style={styles.bottomLoader} size="small" color="#007AFF" />
+);
+
+// ─── PictureGallery ──────────────────────────────────────────────────────────
 
 export default function PictureGallery() {
   const {
-    assets,
+    sections,
     isLoading,
+    isRefreshing,
     selectedIds,
     isMultiSelectEnabled,
+    hasNextPage,
+    permissionGranted,
     requestPermission,
     handleLongPress,
     toggleSelect,
-    handleAddPress,
+    handleAddSelected,
     handleCancel,
     fetchMore,
-    permissionGranted,
-    handleDelete,
+    handleDeleteSelected,
     refreshData,
-  } = useMultiSelect();
+    refreshFromLibrary,
+  } = useGallery();
+
+  const [albumPickerVisible, setAlbumPickerVisible] = useState(false);
   const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
       refreshData();
-    }, []),
+    }, [refreshData]),
   );
 
-  const handleOnItemPress = (item: MediaProps) => {
-    if (isMultiSelectEnabled) {
-      toggleSelect(item.mediaPath);
-    } else {
-      router.push({
-        pathname: "/details",
-        params: {
-          id: item.id,
-          notes: item.notes,
-          uniqueId: item.uniqueId,
-          mediaPath: item.mediaPath,
-        },
-      });
-    }
-  };
+  const handleItemPress = useCallback(
+    (item: MediaProps) => {
+      if (isMultiSelectEnabled) {
+        toggleSelect(item.mediaPath);
+      } else {
+        router.push({
+          pathname: "/details",
+          params: {
+            id: item.id,
+            notes: item.notes,
+            uniqueId: item.uniqueId,
+            mediaPath: item.mediaPath,
+          },
+        });
+      }
+    },
+    [isMultiSelectEnabled, router, toggleSelect],
+  );
 
   if (!permissionGranted) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.permissionText}>
+          Allow access to your photo library to get started.
+        </Text>
         <TouchableOpacity style={styles.btnPrimary} onPress={requestPermission}>
           <Text style={styles.btnText}>Grant Library Permission</Text>
         </TouchableOpacity>
@@ -71,95 +182,78 @@ export default function PictureGallery() {
     );
   }
 
-  const renderItem = ({ item }: { item: MediaProps }) => {
-    const isSelected = selectedIds.has(item.mediaPath);
-    return (
-      <TouchableOpacity
-        style={styles.gridItem}
-        onPress={() => handleOnItemPress(item)}
-        onLongPress={() => handleLongPress(item.mediaPath)}
-        activeOpacity={0.75}
-      >
-        <Image source={{ uri: item.mediaPath }} style={styles.mediaThumbnail} />
-        {isSelected && <View style={styles.visualDimmer} />}
-        {isMultiSelectEnabled && (
-          <View
-            style={[
-              styles.indicatorBadge,
-              isSelected ? styles.badgeActive : styles.badgeInactive,
-            ]}
-          >
-            {isSelected && <Text style={styles.glyphCheck}>✓</Text>}
-          </View>
-        )}
-        {item.id && (
-          <View style={styles.indicatorUpload}>
-            <MaterialCommunityIcons
-              name="cloud-check-variant"
-              size={18}
-              color={"white"}
-            />
-          </View>
-        )}
-        {!!item.notes && (
-          <View style={styles.indicatorNotes}>
-            <MaterialCommunityIcons name="note" size={18} color={"white"} />
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
+  const renderRow = useCallback(
+    ({ item: row }: { item: MediaProps[] }) => (
+      <GalleryRow
+        row={row}
+        selectedIds={selectedIds}
+        isMultiSelectEnabled={isMultiSelectEnabled}
+        onPress={handleItemPress}
+        onLongPress={handleLongPress}
+      />
+    ),
+    [selectedIds, isMultiSelectEnabled, handleItemPress, handleLongPress],
+  );
+
+  const selectedPaths = Array.from(selectedIds);
 
   return (
     <View style={styles.canvas}>
       <PictureNavbar
         headerTitle="Picture Note"
         isAddIconVisible={selectedIds.size > 0}
-        onAddPress={handleAddPress}
+        onAddPress={handleAddSelected}
+        isAlbumIconVisible={selectedIds.size > 0}
+        onAlbumPress={() => setAlbumPickerVisible(true)}
         isCancelTextVisible={selectedIds.size > 0}
         onCancelPress={handleCancel}
         isDeleteIconVisible={selectedIds.size > 0}
-        onDeletePress={handleDelete}
+        onDeletePress={handleDeleteSelected}
       />
 
-      <FlatList
-        data={assets}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.uniqueId}
-        numColumns={COLUMNS}
+      <SectionList<MediaProps[], GallerySection>
+        sections={sections}
+        keyExtractor={(row, index) => row[0]?.uniqueId ?? String(index)}
+        renderSectionHeader={renderSectionHeader}
+        renderItem={renderRow}
+        stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.scrollLayout}
-        onEndReached={fetchMore}
+        refreshing={isRefreshing}
+        onRefresh={refreshFromLibrary}
+        onEndReached={hasNextPage ? fetchMore : undefined}
         onEndReachedThreshold={0.4}
         extraData={selectedIds}
-        ListFooterComponent={() =>
-          isLoading ? (
-            <ActivityIndicator
-              style={styles.bottomLoader}
-              size="small"
-              color="#007AFF"
-            />
-          ) : null
-        }
+        ListFooterComponent={isLoading ? GalleryFooter : null}
+      />
+
+      <AlbumPickerModal
+        visible={albumPickerVisible}
+        selectedMediaPaths={selectedPaths}
+        onClose={() => setAlbumPickerVisible(false)}
+        onAdded={handleCancel}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  canvas: { flex: 1, backgroundColor: "#FAF9F6", height: "100%" },
-  appBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderColor: "#EAEAEA",
-    backgroundColor: "#FFFFFF",
-  },
-  appTitle: { fontSize: 18, fontWeight: "700", color: "#1C1C1E" },
-  actionClear: { color: "#FF3B30", fontSize: 15, fontWeight: "600" },
+  canvas: { flex: 1, backgroundColor: "#FAF9F6" },
   scrollLayout: { paddingLeft: MARGIN, paddingTop: MARGIN },
+  sectionHeader: {
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 6,
+    backgroundColor: "#FAF9F6",
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#3C3C43",
+    letterSpacing: 0.1,
+  },
+  row: {
+    flexDirection: "row",
+  },
   gridItem: {
     width: ITEM_SIZE,
     height: ITEM_SIZE,
@@ -171,49 +265,39 @@ const styles = StyleSheet.create({
   mediaThumbnail: { width: "100%", height: "100%" },
   visualDimmer: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0, 0, 0, 0.25)",
+    backgroundColor: "rgba(0,0,0,0.25)",
   },
   indicatorBadge: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    top: 6,
+    right: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },
+  badgeInactive: { backgroundColor: "rgba(0,0,0,0.35)" },
+  badgeActive: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
+  glyphCheck: { color: "#fff", fontSize: 11, fontWeight: "900" },
   indicatorUpload: {
     position: "absolute",
-    bottom: 0,
-    right: 10,
-    width: 24,
-    height: 24,
-    color: "#4CD964",
-    justifyContent: "center",
-    alignItems: "center",
+    bottom: 4,
+    right: 6,
   },
   indicatorNotes: {
     position: "absolute",
-    bottom: 0,
-    left: 10,
-    width: 24,
-    height: 24,
-    color: "#4CD964",
-    justifyContent: "center",
-    alignItems: "center",
+    bottom: 4,
+    left: 6,
   },
-  badgeInactive: { backgroundColor: "rgba(0, 0, 0, 0.35)" },
-  badgeActive: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
-  glyphCheck: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 30,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
   },
   permissionText: {
     fontSize: 15,
@@ -228,6 +312,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     borderRadius: 10,
   },
-  btnText: { color: "#FFFFFF", fontWeight: "600", fontSize: 16 },
+  btnText: { color: "#fff", fontWeight: "600", fontSize: 16 },
   bottomLoader: { marginVertical: 20 },
 });
