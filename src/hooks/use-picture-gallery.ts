@@ -51,6 +51,7 @@ function buildSections(assets: MediaProps[]): GallerySection[] {
 export type UseGalleryReturn = {
   sections: GallerySection[];
   isLoading: boolean;
+  isRefreshing: boolean;
   selectedIds: Set<string>;
   isMultiSelectEnabled: boolean;
   hasNextPage: boolean;
@@ -63,6 +64,7 @@ export type UseGalleryReturn = {
   handleCancel: () => void;
   fetchMore: () => Promise<void>;
   refreshData: () => Promise<void>;
+  refreshFromLibrary: () => Promise<void>;
 };
 
 export function useGallery(): UseGalleryReturn {
@@ -72,6 +74,7 @@ export function useGallery(): UseGalleryReturn {
   const [hasNextPage, setHasNextPage] = useState(true);
   const [isMultiSelectEnabled, setIsMultiSelectEnabled] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Refs hold mutable pagination state so fetchMedia never captures stale values
   const currentOffsetRef = useRef(0);
@@ -263,9 +266,22 @@ export function useGallery(): UseGalleryReturn {
     }
   }, [getAllMedias]);
 
+  // Pull-to-refresh: wipes local state and re-queries the media library from scratch
+  const refreshFromLibrary = useCallback(async () => {
+    setIsRefreshing(true);
+    currentOffsetRef.current = 0;
+    hasNextPageRef.current = true;
+    isLoadingRef.current = false;
+    dbCacheLoadedRef.current = false;
+    setAssets([]);
+    await fetchMedia();
+    setIsRefreshing(false);
+  }, [fetchMedia]);
+
   return {
     sections,
     isLoading,
+    isRefreshing,
     selectedIds,
     isMultiSelectEnabled,
     hasNextPage,
@@ -278,5 +294,6 @@ export function useGallery(): UseGalleryReturn {
     handleCancel,
     fetchMore,
     refreshData,
+    refreshFromLibrary,
   };
 }

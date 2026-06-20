@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { randomUUID } from "expo-crypto";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -24,7 +24,7 @@ const COLUMNS = 3;
 const MARGIN = 2;
 const ITEM_SIZE = (WINDOW_WIDTH - MARGIN * (COLUMNS + 1)) / COLUMNS;
 
-type AlbumImage = { uniqueId: string; mediaPath: string };
+type AlbumImage = { uniqueId: string; mediaPath: string; dbId?: number; dbNotes?: string };
 
 type Params = { albumId: string; albumName: string };
 
@@ -40,8 +40,13 @@ export default function AlbumDetail() {
 
   const loadImages = useCallback(async () => {
     try {
-      const paths = await getAlbumMediaPaths(Number(albumId));
-      setImages(paths.map((p) => ({ uniqueId: randomUUID(), mediaPath: p })));
+      const items = await getAlbumMediaPaths(Number(albumId));
+      setImages(items.map((p) => ({
+        uniqueId: randomUUID(),
+        mediaPath: p.mediaPath,
+        dbId: p.id ?? undefined,
+        dbNotes: p.notes ?? undefined,
+      })));
     } catch {
       Toast.show({ type: "error", text1: "Failed to load album" });
     } finally {
@@ -52,6 +57,12 @@ export default function AlbumDetail() {
   useEffect(() => {
     loadImages();
   }, [loadImages]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadImages();
+    }, [loadImages]),
+  );
 
   const toggleSelect = (path: string) => {
     setSelectedPaths((prev) => {
@@ -86,14 +97,31 @@ export default function AlbumDetail() {
     setIsMultiSelect(false);
   };
 
+  const handlePress = useCallback(
+    (item: AlbumImage) => {
+      if (isMultiSelect) {
+        toggleSelect(item.mediaPath);
+      } else {
+        router.push({
+          pathname: "/details",
+          params: {
+            id: item.dbId,
+            notes: item.dbNotes,
+            uniqueId: item.uniqueId,
+            mediaPath: item.mediaPath,
+          },
+        });
+      }
+    },
+    [isMultiSelect, router, toggleSelect],
+  );
+
   const renderItem = ({ item }: { item: AlbumImage }) => {
     const isSelected = selectedPaths.has(item.mediaPath);
     return (
       <TouchableOpacity
         style={styles.gridItem}
-        onPress={() => {
-          if (isMultiSelect) toggleSelect(item.mediaPath);
-        }}
+        onPress={() => handlePress(item)}
         onLongPress={() => handleLongPress(item.mediaPath)}
         activeOpacity={0.8}
       >
@@ -102,6 +130,11 @@ export default function AlbumDetail() {
         {isMultiSelect && (
           <View style={[styles.badge, isSelected ? styles.badgeActive : styles.badgeInactive]}>
             {isSelected && <Text style={styles.check}>✓</Text>}
+          </View>
+        )}
+        {!!item.dbNotes && (
+          <View style={styles.indicatorNotes}>
+            <MaterialCommunityIcons name="note" size={18} color="white" />
           </View>
         )}
       </TouchableOpacity>
@@ -204,4 +237,5 @@ const styles = StyleSheet.create({
   badgeInactive: { backgroundColor: "rgba(0,0,0,0.35)" },
   badgeActive: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
   check: { color: "#fff", fontSize: 11, fontWeight: "900" },
+  indicatorNotes: { position: "absolute", bottom: 4, left: 6 },
 });

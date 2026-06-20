@@ -27,10 +27,17 @@ type Params = {
 };
 
 export default function Details() {
-  const { id, uniqueId, mediaPath, notes: initialNotes } = useLocalSearchParams<Params>();
+  const {
+    id,
+    uniqueId,
+    mediaPath,
+    notes: initialNotes,
+  } = useLocalSearchParams<Params>();
 
   // savedId tracks DB state — may change if user adds the record from this screen
-  const [savedId, setSavedId] = useState<number | undefined>(id ? +id : undefined);
+  const [savedId, setSavedId] = useState<number | undefined>(
+    id ? +id : undefined,
+  );
   // mediaNote drives all display and editing; initialised from route param
   const [mediaNote, setMediaNote] = useState(initialNotes ?? "");
   const [notesSheetVisible, setNotesSheetVisible] = useState(false);
@@ -129,7 +136,10 @@ export default function Details() {
         {/* Notes overlay — only shown when there are saved notes */}
         {!!mediaNote && (
           <View style={styles.notesOverlay}>
-            <TouchableOpacity style={styles.captionTouchable} onPress={openReadSheet}>
+            <TouchableOpacity
+              style={styles.captionTouchable}
+              onPress={openReadSheet}
+            >
               <Text style={styles.captionText} numberOfLines={3}>
                 {mediaNote}
               </Text>
@@ -181,7 +191,10 @@ export default function Details() {
                     />
                     <TouchableOpacity
                       onPress={handleSaveNotes}
-                      style={[styles.saveButton, !mediaNote.trim() && styles.saveButtonDisabled]}
+                      style={[
+                        styles.saveButton,
+                        !mediaNote.trim() && styles.saveButtonDisabled,
+                      ]}
                       disabled={!mediaNote.trim()}
                     >
                       <Text
@@ -242,6 +255,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "flex-end",
+    marginBottom: 26,
   },
   backdropTouchable: {
     flex: 1,

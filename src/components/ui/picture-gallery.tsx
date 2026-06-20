@@ -5,7 +5,6 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   Image,
   SectionList,
@@ -13,6 +12,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import PictureNavbar from "./picture-navbar";
 
@@ -26,16 +26,16 @@ type GalleryItemProps = {
   item: MediaProps;
   isSelected: boolean;
   isMultiSelectEnabled: boolean;
-  onPress: () => void;
-  onLongPress: () => void;
+  onPress: (item: MediaProps) => void;
+  onLongPress: (mediaPath: string) => void;
 };
 
 const GalleryItem = React.memo(
   ({ item, isSelected, isMultiSelectEnabled, onPress, onLongPress }: GalleryItemProps) => (
     <TouchableOpacity
       style={styles.gridItem}
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={() => onPress(item)}
+      onLongPress={() => onLongPress(item.mediaPath)}
       activeOpacity={0.75}
     >
       <Image source={{ uri: item.mediaPath }} style={styles.mediaThumbnail} />
@@ -69,6 +69,21 @@ type GalleryRowProps = {
   onLongPress: (mediaPath: string) => void;
 };
 
+function rowsEqual(prev: GalleryRowProps, next: GalleryRowProps): boolean {
+  if (
+    prev.row !== next.row ||
+    prev.isMultiSelectEnabled !== next.isMultiSelectEnabled ||
+    prev.onPress !== next.onPress ||
+    prev.onLongPress !== next.onLongPress
+  )
+    return false;
+  for (const item of next.row) {
+    if (prev.selectedIds.has(item.mediaPath) !== next.selectedIds.has(item.mediaPath))
+      return false;
+  }
+  return true;
+}
+
 const GalleryRow = React.memo(
   ({ row, selectedIds, isMultiSelectEnabled, onPress, onLongPress }: GalleryRowProps) => (
     <View style={styles.row}>
@@ -78,8 +93,8 @@ const GalleryRow = React.memo(
           item={item}
           isSelected={selectedIds.has(item.mediaPath)}
           isMultiSelectEnabled={isMultiSelectEnabled}
-          onPress={() => onPress(item)}
-          onLongPress={() => onLongPress(item.mediaPath)}
+          onPress={onPress}
+          onLongPress={onLongPress}
         />
       ))}
       {/* Fill empty slots in the last row of a section */}
@@ -89,6 +104,19 @@ const GalleryRow = React.memo(
         ))}
     </View>
   ),
+  rowsEqual,
+);
+
+// ─── Static helpers (no component state) ────────────────────────────────────
+
+const renderSectionHeader = ({ section }: { section: GallerySection }) => (
+  <View style={styles.sectionHeader}>
+    <Text style={styles.sectionTitle}>{section.title}</Text>
+  </View>
+);
+
+const GalleryFooter = () => (
+  <ActivityIndicator style={styles.bottomLoader} size="small" color="#007AFF" />
 );
 
 // ─── PictureGallery ──────────────────────────────────────────────────────────
@@ -97,6 +125,7 @@ export default function PictureGallery() {
   const {
     sections,
     isLoading,
+    isRefreshing,
     selectedIds,
     isMultiSelectEnabled,
     hasNextPage,
@@ -109,6 +138,7 @@ export default function PictureGallery() {
     fetchMore,
     handleDeleteSelected,
     refreshData,
+    refreshFromLibrary,
   } = useGallery();
 
   const [albumPickerVisible, setAlbumPickerVisible] = useState(false);
@@ -152,20 +182,17 @@ export default function PictureGallery() {
     );
   }
 
-  const renderSectionHeader = ({ section }: { section: GallerySection }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{section.title}</Text>
-    </View>
-  );
-
-  const renderRow = ({ item: row }: { item: MediaProps[] }) => (
-    <GalleryRow
-      row={row}
-      selectedIds={selectedIds}
-      isMultiSelectEnabled={isMultiSelectEnabled}
-      onPress={handleItemPress}
-      onLongPress={handleLongPress}
-    />
+  const renderRow = useCallback(
+    ({ item: row }: { item: MediaProps[] }) => (
+      <GalleryRow
+        row={row}
+        selectedIds={selectedIds}
+        isMultiSelectEnabled={isMultiSelectEnabled}
+        onPress={handleItemPress}
+        onLongPress={handleLongPress}
+      />
+    ),
+    [selectedIds, isMultiSelectEnabled, handleItemPress, handleLongPress],
   );
 
   const selectedPaths = Array.from(selectedIds);
@@ -191,14 +218,12 @@ export default function PictureGallery() {
         renderItem={renderRow}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.scrollLayout}
+        refreshing={isRefreshing}
+        onRefresh={refreshFromLibrary}
         onEndReached={hasNextPage ? fetchMore : undefined}
         onEndReachedThreshold={0.4}
         extraData={selectedIds}
-        ListFooterComponent={() =>
-          isLoading ? (
-            <ActivityIndicator style={styles.bottomLoader} size="small" color="#007AFF" />
-          ) : null
-        }
+        ListFooterComponent={isLoading ? GalleryFooter : null}
       />
 
       <AlbumPickerModal

@@ -1,4 +1,4 @@
-import { ALBUM_MEDIA_TABLE_NAME, ALBUM_TABLE_NAME } from "@/constants/app-contants";
+import { ALBUM_MEDIA_TABLE_NAME, ALBUM_TABLE_NAME, PICTURE_TABLE_NAME } from "@/constants/app-contants";
 import { AlbumWithStats } from "@/constants/picture";
 import { useCallback } from "react";
 import { useSQLiteContext } from "expo-sqlite";
@@ -16,9 +16,9 @@ export function useAlbumDb() {
     } finally {
       await stmt.finalizeAsync();
     }
-  };
+  }, [db]);
 
-  const getAllAlbumsWithStats = async (): Promise<AlbumWithStats[]> => {
+  const getAllAlbumsWithStats = useCallback(async (): Promise<AlbumWithStats[]> => {
     return db.getAllAsync<AlbumWithStats>(`
       SELECT
         a.id,
@@ -33,9 +33,9 @@ export function useAlbumDb() {
       GROUP BY a.id
       ORDER BY a.createdOn DESC
     `);
-  };
+  }, [db]);
 
-  const addMediaToAlbum = async (albumId: number, mediaPaths: string[]): Promise<void> => {
+  const addMediaToAlbum = useCallback(async (albumId: number, mediaPaths: string[]): Promise<void> => {
     if (mediaPaths.length === 0) return;
     const stmt = await db.prepareAsync(
       `INSERT OR IGNORE INTO ${ALBUM_MEDIA_TABLE_NAME} (albumId, mediaPath, addedOn)
@@ -48,17 +48,20 @@ export function useAlbumDb() {
     } finally {
       await stmt.finalizeAsync();
     }
-  };
+  }, [db]);
 
-  const getAlbumMediaPaths = async (albumId: number): Promise<string[]> => {
-    const rows = await db.getAllAsync<{ mediaPath: string }>(
-      `SELECT mediaPath FROM ${ALBUM_MEDIA_TABLE_NAME} WHERE albumId = ? ORDER BY addedOn DESC`,
+  const getAlbumMediaPaths = useCallback(async (albumId: number): Promise<{ mediaPath: string; id?: number; notes?: string }[]> => {
+    return db.getAllAsync<{ mediaPath: string; id?: number; notes?: string }>(
+      `SELECT am.mediaPath, p.id, p.notes
+       FROM ${ALBUM_MEDIA_TABLE_NAME} am
+       LEFT JOIN ${PICTURE_TABLE_NAME} p ON am.mediaPath = p.mediaPath
+       WHERE am.albumId = ?
+       ORDER BY am.addedOn DESC`,
       albumId,
     );
-    return rows.map((r) => r.mediaPath);
-  };
+  }, [db]);
 
-  const removeMediaFromAlbum = async (albumId: number, mediaPaths: string[]): Promise<void> => {
+  const removeMediaFromAlbum = useCallback(async (albumId: number, mediaPaths: string[]): Promise<void> => {
     if (mediaPaths.length === 0) return;
     const stmt = await db.prepareAsync(
       `DELETE FROM ${ALBUM_MEDIA_TABLE_NAME} WHERE albumId = $albumId AND mediaPath = $mediaPath;`,
@@ -70,9 +73,9 @@ export function useAlbumDb() {
     } finally {
       await stmt.finalizeAsync();
     }
-  };
+  }, [db]);
 
-  const deleteAlbum = async (albumId: number): Promise<void> => {
+  const deleteAlbum = useCallback(async (albumId: number): Promise<void> => {
     const stmt = await db.prepareAsync(
       `DELETE FROM ${ALBUM_TABLE_NAME} WHERE id = $id;`,
     );
@@ -81,7 +84,7 @@ export function useAlbumDb() {
     } finally {
       await stmt.finalizeAsync();
     }
-  };
+  }, [db]);
 
   return {
     createAlbum,
