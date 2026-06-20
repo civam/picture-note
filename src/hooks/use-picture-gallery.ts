@@ -47,10 +47,11 @@ export function useMultiSelect(): UseMultiSelectReturn {
     try {
       const queriedAssets = await new Query()
         .eq(MediaLibrary.AssetField.MEDIA_TYPE, MediaType.IMAGE) // Filter matching images
-        .orderBy(MediaLibrary.AssetField.CREATION_TIME) // Sort descending
+        .orderBy({ key: MediaLibrary.AssetField.MODIFICATION_TIME, ascending: false }) // Sort ascending
         .limit(BATCH_LIMIT) // Fetch limited bulk record
         .offset(currentOffset) // Progressive page scanning
         .exe(); // Execute the native request
+
       let uploadedAssest: MediaProps[] = [];
 
       if (!isDbAssetsLoaded) {
@@ -62,11 +63,13 @@ export function useMultiSelect(): UseMultiSelectReturn {
       const resolved: MediaProps[] = await Promise.all(
         queriedAssets.map(async (a) => {
           const mediaPath = await a.getUri(); // Use the URI as the mediaPath
+          const dbAssest = uploadedAssest?.find((u) => u.mediaPath === mediaPath);
           return {
             uniqueId: randomUUID(),
-            id: uploadedAssest?.find((u) => u.mediaPath === mediaPath)?.id,
+            id: dbAssest?.id,
             mediaPath,
             mediaType: await a.getMediaType(), // Get the media type
+            notes: dbAssest?.notes
           };
         }),
       );
@@ -118,11 +121,11 @@ export function useMultiSelect(): UseMultiSelectReturn {
     })();
   }, [fetchMedia]);
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = (mediaPath: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(mediaPath)) next.delete(mediaPath);
+      else next.add(mediaPath);
       return next;
     });
   };
@@ -180,7 +183,7 @@ export function useMultiSelect(): UseMultiSelectReturn {
       setAssets((prev) =>
         prev.map((p) => {
           const dbRecord = res.find((r) => r.mediaPath === p.mediaPath);
-          if (dbRecord) return { ...p, id: dbRecord.id };
+          if (dbRecord) return { ...p, id: dbRecord.id, notes: dbRecord.notes };
           return { ...p, id: undefined };
         }),
       );
