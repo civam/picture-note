@@ -70,14 +70,6 @@ export function usePictureDb() {
     } finally {
       await statement.finalizeAsync();
     }
-
-    // console.log(id);
-    // const db = await SQLite.openDatabaseAsync(DB_NAME);
-    // await db.runAsync(
-    //   `'UPDATE ${PICTURE_TABLE_NAME} SET notes = ? WHERE id = ?'`,
-    //   picNotes,
-    //   id,
-    // );
   };
 
   const getAllMedias = async () => {

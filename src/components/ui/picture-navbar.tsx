@@ -14,14 +14,13 @@ interface PictureNavbarProps {
   isAddIconVisible?: boolean;
   isDeleteIconVisible?: boolean;
   isEditIconVisible?: boolean;
-  showSearchIcon?: boolean;
+  isSearchIconVisible?: boolean;
   isCancelTextVisible?: boolean;
   onGoBack?: (event: GestureResponderEvent) => void;
   onAddPress?: (event: GestureResponderEvent) => void;
   onDeletePress?: (event: GestureResponderEvent) => void;
   onSearchPress?: (event: GestureResponderEvent) => void;
   onEditNotePress?: (event: GestureResponderEvent) => void;
-  onCopyNotePress?: (event: GestureResponderEvent) => void;
   onCancelPress?: (event: GestureResponderEvent) => void;
 }
 
@@ -32,12 +31,11 @@ const PictureNavbar: React.FC<PictureNavbarProps> = ({
   onAddPress,
   onDeletePress,
   onEditNotePress,
-  onCopyNotePress,
   isCancelTextVisible,
   isAddIconVisible,
   isDeleteIconVisible,
   isEditIconVisible,
-  showSearchIcon,
+  isSearchIconVisible,
   onCancelPress,
 }) => {
   return (
@@ -46,34 +44,34 @@ const PictureNavbar: React.FC<PictureNavbarProps> = ({
       <View style={styles.iconContainer}>
         {!!onGoBack && (
           <Pressable onPress={onGoBack}>
-            <MaterialIcons name="arrow-back" size={24} style={styles.icon} />
+            <MaterialIcons name="arrow-back" size={20} style={styles.icon} />
           </Pressable>
         )}
+        <Text style={styles.title}>{headerTitle}</Text>
       </View>
-      <Text style={styles.title}>{headerTitle}</Text>
 
       {/* Right Icons */}
       <View style={styles.iconContainer}>
-        {!!onSearchPress && (
+        {isSearchIconVisible && !!onSearchPress && (
           <Pressable onPress={onSearchPress}>
-            <MaterialIcons name="search" size={24} color="black" />
+            <MaterialIcons name="search" size={20} color="black" />
           </Pressable>
         )}
 
         {isDeleteIconVisible && !!onDeletePress && (
           <Pressable onPress={onDeletePress}>
-            <MaterialIcons name="delete" size={24} style={styles.icon} />
+            <MaterialIcons name="delete" size={20} color="red" />
           </Pressable>
         )}
 
         {!!onAddPress && isAddIconVisible && (
           <Pressable onPress={onAddPress}>
-            <MaterialIcons name="cloud-upload" size={24} style={styles.icon} />
+            <MaterialIcons name="cloud-upload" size={20} style={styles.icon} />
           </Pressable>
         )}
         {!!onEditNotePress && isEditIconVisible && (
           <Pressable onPress={onEditNotePress}>
-            <MaterialIcons name="edit" size={24} style={styles.icon} />
+            <MaterialIcons name="edit" size={20} style={styles.icon} />
           </Pressable>
         )}
         {!!onCancelPress && isCancelTextVisible && (
@@ -88,16 +86,15 @@ const PictureNavbar: React.FC<PictureNavbarProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    height: 80,
-    paddingTop: 20, // for status bar spacing
-    paddingHorizontal: 16,
-    backgroundColor: "#f7f7f7",
+    height: 48,
+    paddingHorizontal: 8,
+    backgroundColor: "#fff",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   title: {
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: "600",
   },
   iconContainer: {
@@ -110,7 +107,7 @@ const styles = StyleSheet.create({
   actionText: {
     color: "#000",
     fontWeight: "600",
-    fontSize: 18,
+    fontSize: 16,
   },
 });
 

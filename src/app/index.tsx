@@ -1,23 +1,12 @@
 import { StyleSheet } from "react-native";
 
-import MultiSelectMedia from "@/components/ui/multi-select";
+import PictureGallery from "@/components/ui/picture-gallery";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const handleSearchPress = () => {};
-
-  const handleAddPress = () => {};
-
   return (
     <SafeAreaView style={styles.container}>
-      {/* <PictureNavbar
-        headerTitle={"Picture Note"}
-        onSearchPress={handleSearchPress}
-      /> */}
-      {/* <PictureGallery />
-      <BrowseMedia /> */}
-      <MultiSelectMedia />
-      {/* </View> */}
+      <PictureGallery />
     </SafeAreaView>
   );
 }
