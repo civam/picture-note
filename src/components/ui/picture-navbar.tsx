@@ -1,4 +1,4 @@
-// components/Navbar.tsx
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   GestureResponderEvent,
@@ -15,12 +15,14 @@ interface PictureNavbarProps {
   isDeleteIconVisible?: boolean;
   isEditIconVisible?: boolean;
   isSearchIconVisible?: boolean;
+  isAlbumIconVisible?: boolean;
   isCancelTextVisible?: boolean;
   onGoBack?: (event: GestureResponderEvent) => void;
   onAddPress?: (event: GestureResponderEvent) => void;
   onDeletePress?: (event: GestureResponderEvent) => void;
   onSearchPress?: (event: GestureResponderEvent) => void;
   onEditNotePress?: (event: GestureResponderEvent) => void;
+  onAlbumPress?: (event: GestureResponderEvent) => void;
   onCancelPress?: (event: GestureResponderEvent) => void;
 }
 
@@ -31,12 +33,14 @@ const PictureNavbar: React.FC<PictureNavbarProps> = ({
   onAddPress,
   onDeletePress,
   onEditNotePress,
+  onAlbumPress,
+  onCancelPress,
   isCancelTextVisible,
   isAddIconVisible,
   isDeleteIconVisible,
   isEditIconVisible,
   isSearchIconVisible,
-  onCancelPress,
+  isAlbumIconVisible,
 }) => {
   return (
     <View style={styles.container}>
@@ -67,6 +71,11 @@ const PictureNavbar: React.FC<PictureNavbarProps> = ({
         {!!onAddPress && isAddIconVisible && (
           <Pressable onPress={onAddPress}>
             <MaterialIcons name="cloud-upload" size={20} style={styles.icon} />
+          </Pressable>
+        )}
+        {!!onAlbumPress && isAlbumIconVisible && (
+          <Pressable onPress={onAlbumPress}>
+            <MaterialCommunityIcons name="folder-plus-outline" size={22} style={styles.icon} />
           </Pressable>
         )}
         {!!onEditNotePress && isEditIconVisible && (
